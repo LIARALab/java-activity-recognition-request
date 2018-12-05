@@ -1,7 +1,7 @@
 package org.liara.request.validator;
 
-import com.google.common.collect.Iterables;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.liara.request.validator.error.APIRequestError;
 import org.liara.request.APIRequest;
 import org.liara.request.validator.error.InvalidAPIRequestException;
@@ -11,79 +11,41 @@ import java.util.*;
 public class APIRequestValidation implements Iterable<@NonNull APIRequestError>
 {
   @NonNull
-  private final APIRequest _validated;
+  private final APIRequest _request;
 
   @NonNull
   private final Set<@NonNull APIRequestError> _errors;
 
-  public static @NonNull APIRequestValidation concat (@NonNull final APIRequestValidation ...validations) {
-    @NonNull APIRequestValidation validation = new APIRequestValidation(validations[0].getRequest());
-
-    for (int index = 0; index < validations.length; ++index) {
-      validation = validation.addErrors(validations[index]);
-    }
-
-    return validation;
-  }
-
-  public APIRequestValidation (@NonNull final APIRequest validated) {
-    _validated = validated;
+  public APIRequestValidation (@NonNull final APIRequest request) {
+    _request = request;
     _errors = new HashSet<>();
   }
 
-  protected APIRequestValidation (
-    @NonNull final APIRequest validated,
-    @NonNull final Iterable<@NonNull APIRequestError> errors
-  ) {
-    _validated = validated;
-    _errors = new HashSet<>();
-    errors.forEach(_errors::add);
+  public APIRequestValidation (@NonNull final APIRequestValidation toCopy) {
+    _request = toCopy.getRequest();
+    _errors = new HashSet<>(toCopy.getErrors());
   }
 
-  protected APIRequestValidation (
-    @NonNull final APIRequest validated,
-    @NonNull final Iterator<@NonNull APIRequestError> errors
-  ) {
-    _validated = validated;
-    _errors = new HashSet<>();
-    while (errors.hasNext()) {
-      _errors.add(errors.next());
-    }
+  public void addError (@NonNull final APIRequestError error) {
+    _errors.add(error);
   }
 
-  protected APIRequestValidation (
-    @NonNull final APIRequest validated,
-    @NonNull final APIRequestError[] errors
-  ) {
-    _validated = validated;
-    _errors = new HashSet<>(Arrays.asList(errors));
+  public void addErrors (@NonNull final APIRequestError ...errors) {
+    _errors.addAll(Arrays.asList(errors));
   }
 
-  public @NonNull APIRequestValidation addError (@NonNull final APIRequestError error) {
-    return new APIRequestValidation(_validated, Iterables.concat(_errors, Arrays.asList(error)));
+  public void addErrors (@NonNull final APIRequestValidation validation) {
+    _errors.addAll(validation.getErrors());
   }
-
-  public @NonNull APIRequestValidation addErrors (@NonNull final APIRequestError ...errors) {
-    return new APIRequestValidation(_validated, Iterables.concat(_errors, Arrays.asList(errors)));
-  }
-
-  public @NonNull APIRequestValidation addErrors (@NonNull final APIRequestValidation validation) {
-    return new APIRequestValidation(_validated, Iterables.concat(this, validation));
-  }
-
-  public @NonNull APIRequest getRequest () {
-    return _validated;
-  }
-
-  public void throwIfInvalid () {
-    throw new InvalidAPIRequestException(this);
+  public void assertRequestIsValid () throws InvalidAPIRequestException  {
+    if (hasErrors()) throw new InvalidAPIRequestException(this);
   }
 
   public boolean isValid () {
     return _errors.size() <= 0;
   }
 
-  public boolean isInvalid () {
+  public boolean hasErrors () {
     return _errors.size() > 0;
   }
 
@@ -91,8 +53,49 @@ public class APIRequestValidation implements Iterable<@NonNull APIRequestError>
     return Collections.unmodifiableSet(_errors);
   }
 
+  public void setErrors (@NonNull final Iterator<@NonNull APIRequestError> errors) {
+    _errors.clear();
+    errors.forEachRemaining(_errors::add);
+  }
+
+  public void setErrors (@NonNull final Iterable<@NonNull APIRequestError> errors) {
+    setErrors(errors.iterator());
+  }
+
+  public void setErrors (@NonNull final Set<@NonNull APIRequestError> errors) {
+    setErrors(errors.iterator());
+  }
+
+  public void setErrors (@NonNull final Collection<@NonNull APIRequestError> errors) {
+    setErrors(errors.iterator());
+  }
+
+  public @NonNull APIRequest getRequest () {
+    return _request;
+  }
+
   @Override
   public @NonNull Iterator<@NonNull APIRequestError> iterator () {
     return Collections.unmodifiableSet(_errors).iterator();
+  }
+
+  @Override
+  public int hashCode () {
+    return Objects.hash(_request, _errors);
+  }
+
+  @Override
+  public boolean equals (@Nullable final Object other) {
+    if (other == null) return false;
+    if (other == this) return true;
+
+    if (other instanceof APIRequestValidation) {
+      @NonNull final APIRequestValidation otherValidation = (APIRequestValidation) other;
+
+      return Objects.equals(_errors, otherValidation.getErrors()) &&
+             Objects.equals(_request, otherValidation.getRequest());
+    }
+
+    return false;
   }
 }

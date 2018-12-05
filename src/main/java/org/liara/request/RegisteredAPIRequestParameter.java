@@ -143,7 +143,7 @@ public class RegisteredAPIRequestParameter implements APIRequestParameter {
    */
   @Override
   public @NonNull Optional<String> get (final int index) {
-    if (index > 0 && index < _values.length) {
+    if (index >= 0 && index < _values.length) {
       return Optional.of(_values[index]);
     } else {
       return Optional.empty();

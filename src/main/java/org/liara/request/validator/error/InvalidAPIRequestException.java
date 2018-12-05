@@ -47,7 +47,7 @@ import java.util.*;
  * @author C&eacute;dric DEMONGIVERT [cedric.demongivert@gmail.com](mailto:cedric.demongivert@gmail.com)
  */
 @JsonIgnoreProperties({ "cause", "message", "stackTrace", "localizedMessage", "suppressed" })
-public class InvalidAPIRequestException extends Error
+public class InvalidAPIRequestException extends Exception
 {
   /**
    * 
