@@ -24,8 +24,10 @@ package org.liara.request;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Cédric DEMONGIVERT [cedric.demongivert@gmail.com](mailto:cedric.demongivert@gmail.com)
@@ -54,19 +56,23 @@ public class APIRequest implements Iterable<@NonNull APIRequestParameter>
       _parameters.put(parameter.getName(), new RegisteredAPIRequestParameter(this, parameter));
     }
   }
-  
+
   /**
    * Create a new APIRequest instance with all the parameters stored in a given Map.
-   * 
+   *
    * @param parameters A map of parameters key, values pair.
    */
-  public APIRequest (@NonNull final Map<@NonNull String, @NonNull String[]> parameters) {
+  public APIRequest (@NonNull final Map<@NonNull String, @NonNull List<@Nullable String>> parameters) {
     _parameters = HashBiMap.create();
-    
-    for (final Map.Entry<String, String[]> entry : parameters.entrySet()) {
+
+    for (final Map.@NonNull Entry<@NonNull String, @NonNull List<@Nullable String>> entry : parameters.entrySet()) {
       _parameters.put(
-        entry.getKey(), 
-        new RegisteredAPIRequestParameter(this, entry.getKey(), entry.getValue())
+        entry.getKey(),
+        new RegisteredAPIRequestParameter(
+          this,
+          entry.getKey(),
+          entry.getValue().stream().map(x -> x == null ? "" : x).collect(Collectors.toList())
+        )
       );
     }
   }
@@ -127,15 +133,15 @@ public class APIRequest implements Iterable<@NonNull APIRequestParameter>
    * @return A child request with all parameters of this request that share a common prefix.
    */
   public @NonNull APIRequest getRequest (@NonNull final String prefix) {
-    @NonNull final Map<@NonNull String, @NonNull String[]> result = new HashMap<>();
+    @NonNull final Map<@NonNull String, @NonNull List<String>> result = new HashMap<>();
     
     for (@NonNull final APIRequestParameter parameter : _parameters.values()) {
       @NonNull final String name = parameter.getName();
       if (name.startsWith(prefix)) {
         if (name.length() == prefix.length()) {
-          result.put(name, parameter.get());
+          result.put(name, Arrays.asList(parameter.get()));
         } else if (name.charAt(prefix.length()) == '.') {
-          result.put(name.substring(prefix.length() + 1), parameter.get());
+          result.put(name.substring(prefix.length() + 1), Arrays.asList(parameter.get()));
         }
       }
     }

@@ -74,7 +74,7 @@ public class RegisteredAPIRequestParameter implements APIRequestParameter {
   ) {
     _request = request;
     _name = name;
-    _values = values.toArray(new String[values.size()]);
+    _values = values.toArray(new String[0]);
   }
   
   public RegisteredAPIRequestParameter (
