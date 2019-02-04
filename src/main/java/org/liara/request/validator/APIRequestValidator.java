@@ -30,6 +30,7 @@ import org.liara.request.validator.error.APIRequestParameterValueError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * @author C&eacute;dric DEMONGIVERT [cedric.demongivert@gmail.com](mailto:cedric.demongivert@gmail.com)
@@ -69,6 +70,18 @@ public interface APIRequestValidator
     };
   }
 
+  static @NonNull APIRequestValidator factory (
+    @NonNull final Supplier<APIRequestValidator> supplier
+  ) {
+    return (@NonNull final APIRequest request) -> {
+      if (request.getSize() <= 0) {
+        return new APIRequestValidation(request);
+      } else {
+        return supplier.get().validate(request);
+      }
+    };
+  }
+
   /**
    * Return a validator that assert that a field has at least one value.
    *
@@ -81,6 +94,7 @@ public interface APIRequestValidator
   ) {
     return required(name, "The field " + name + " is required.");
   }
+
   /**
    * Return a validator that assert that a field has at least one value.
    *

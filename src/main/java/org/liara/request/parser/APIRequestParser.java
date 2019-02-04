@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author C&eacute;dric DEMONGIVERT [cedric.demongivert@gmail.com](mailto:cedric.demongivert@gmail.com)
@@ -74,6 +75,18 @@ public interface APIRequestParser<Output>
       }
 
       return outputs;
+    };
+  }
+
+  static <Output> @NonNull APIRequestParser<Output> factory (
+    @NonNull final Supplier<APIRequestParser<Output>> supplier
+  ) {
+    return (@NonNull final APIRequest request) -> {
+      if (request.getSize() <= 0) {
+        return null;
+      } else {
+        return supplier.get().parse(request);
+      }
     };
   }
 
